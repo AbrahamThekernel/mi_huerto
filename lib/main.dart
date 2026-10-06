@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MainApp());
@@ -22,15 +23,40 @@ class HuertoPage extends StatefulWidget {
 
 class _HuertoPageState extends State<HuertoPage> {
   final controller = TextEditingController();
-  final List<String> cultivos = [];
+  List<String> cultivos = [];
 
-  void agregarCultivos() {
+  @override
+  void initState() {
+    super.initState();
+    cargar();
+  }
+
+    Future<void> agregar() async {
     final texto = controller.text.trim();
     if (texto.isEmpty) return;
     setState(() {
       cultivos.add(texto);
       controller.clear();
     });
+  }
+
+  void mostrarFecha() {
+    final ahora = DateTime.now();
+    const meses = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+    const dias = [
+      'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'
+    ];
+    final fecha =
+        '${dias[ahora.weekday - 1]} ${ahora.day} de ${meses[ahora.month - 1]} de ${ahora.year}';
+    final hora =
+        '${ahora.hour.toString().padLeft(2, '0')}:${ahora.minute.toString().padLeft(2, '0')}';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$fecha - $hora')),
+    );
   }
 
   @override
@@ -50,8 +76,14 @@ class _HuertoPageState extends State<HuertoPage> {
             ),
             const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: agregarCultivos,
+              onPressed: agregar,
               child: const Text('Agregar'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: mostrarFecha,
+              icon: const Icon(Icons.calendar_today),
+              label: const Text('Ver fecha actual'),
             ),
             const SizedBox(height: 10),
             Expanded(
@@ -61,13 +93,32 @@ class _HuertoPageState extends State<HuertoPage> {
                   return ListTile(
                     leading: const Icon(Icons.eco),
                     title: Text(cultivos[index]),
+                    trailing: IconButton(onPressed:()=> eliminar(index), 
+                    icon: const Icon(Icons.delete)),
                   );
                 },
               ),
             ),
-          ]
+          ],
         ),
       ),
     );
   }
-}
+
+  Future<void> cargar() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      cultivos = prefs.getStringList('Cultivos') ?? [];
+    });
+  }
+
+  Future<void> guardar() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('Cultivos', cultivos);
+    }
+    Future<void> eliminar(int index) async{
+    setState(() => cultivos.removeAt(index));
+    await guardar();
+  }
+  }
+  
