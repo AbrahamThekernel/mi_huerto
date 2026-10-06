@@ -35,12 +35,13 @@ class _HuertoPageState extends State<HuertoPage> {
     final texto = controller.text.trim();
     if (texto.isEmpty) return;
     setState(() {
-      cultivos.add(texto);
+      cultivos.add('$texto (${fechaActual()})');
       controller.clear();
     });
+    await guardar();
   }
 
-  void mostrarFecha() {
+  String fechaActual() {
     final ahora = DateTime.now();
     const meses = [
       'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
@@ -49,14 +50,7 @@ class _HuertoPageState extends State<HuertoPage> {
     const dias = [
       'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'
     ];
-    final fecha =
-        '${dias[ahora.weekday - 1]} ${ahora.day} de ${meses[ahora.month - 1]} de ${ahora.year}';
-    final hora =
-        '${ahora.hour.toString().padLeft(2, '0')}:${ahora.minute.toString().padLeft(2, '0')}';
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$fecha - $hora')),
-    );
+    return '${dias[ahora.weekday - 1]} ${ahora.day} de ${meses[ahora.month - 1]} de ${ahora.year}';
   }
 
   @override
@@ -78,12 +72,6 @@ class _HuertoPageState extends State<HuertoPage> {
             ElevatedButton(
               onPressed: agregar,
               child: const Text('Agregar'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: mostrarFecha,
-              icon: const Icon(Icons.calendar_today),
-              label: const Text('Ver fecha actual'),
             ),
             const SizedBox(height: 10),
             Expanded(
